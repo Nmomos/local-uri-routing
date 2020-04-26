@@ -1,0 +1,78 @@
+version: '3.7'
+services:
+  #############################################################################
+  # frontend
+  #############################################################################
+  client:
+    build:
+      context: ./client
+      target: dev
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    ports:
+      - "8080:8080"
+    environment:
+      - HOST=0.0.0.0
+
+  #############################################################################
+  # backend Ingress-controller
+  #############################################################################
+  # nginx-proxy本体
+  nginx-proxy:
+    image: jwilder/nginx-proxy:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ./api/00_ingress:/etc/nginx/vhost.d
+      - static_volume:/usr/src/app/static
+    depends_on:
+      - a-api
+      - b-api
+      - c-api
+
+  # gateway
+  termination:
+    image: containous/whoami
+    environment:
+      - VIRTUAL_HOST=localhost
+
+  #############################################################################
+  # backend API containers
+  #############################################################################
+  # APIその1
+  a-api:
+    build: ./api/01_a-api
+    expose:
+      - 80
+    command: sh -c "python manage.py runserver 0.0.0.0:80"
+    volumes:
+      - ./api/01_a-api:/usr/src/app
+      - static_volume:/usr/src/app/static
+
+  # APIその2
+  b-api:
+    build: ./api/02_b-api
+    expose:
+      - 80
+    command: sh -c "python manage.py runserver 0.0.0.0:80"
+    volumes:
+      - ./api/02_b-api:/usr/src/app
+      - static_volume:/usr/src/app/static
+
+  # APIその3
+  c-api:
+    build: ./api/03_c-api
+    expose:
+      - 80
+    command: sh -c "python manage.py runserver 0.0.0.0:80"
+    volumes:
+      - ./api/03_c-api:/usr/src/app
+      - static_volume:/usr/src/app/static
+
+#############################################################################
+# volumes
+#############################################################################
+volumes:
+  static_volume:

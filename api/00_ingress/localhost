@@ -1,0 +1,12 @@
+location /api/a-api/ {
+    proxy_pass http://a-api/;
+}
+location /api/b-api/ {
+    proxy_pass http://b-api/;
+}
+location /api/c-api/ {
+    proxy_pass http://c-api/;
+}
+location /static/ {
+    alias /usr/src/app/static/;
+}
